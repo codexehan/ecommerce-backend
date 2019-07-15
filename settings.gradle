@@ -1,0 +1,12 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'ecommerce-backend'
+
+include('inventory')
+include('invoice')
+include('order')
+include('payment')
+include('common')
