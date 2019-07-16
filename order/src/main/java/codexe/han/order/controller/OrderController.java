@@ -45,6 +45,7 @@ public class OrderController {
          *      sub quantity in redis
          *      先发送db 再减redis 防止少卖情况的发生
          */
+        return null;
 
     }
 }

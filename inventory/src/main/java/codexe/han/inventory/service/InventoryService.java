@@ -2,10 +2,11 @@ package codexe.han.inventory.service;
 
 public interface InventoryService {
     /**
-     * 秒杀seckill等场景下，为了提高可用性，缓存和数据库中库存可以不保证强一致性
-     * 通过缓存进行校验，还可以屏蔽到大部分流量。
-     *
-     * 同时，日常业务，读多写少，我们可以先更新数据库库存，然后invalidate 缓存，
+     * 日常业务，读多写少，我们可以先更新数据库库存，然后invalidate 缓存
+     *  可能出现的不一致情况：
+     * 写多读少的情况下，先invalidate 缓存，在更新数据库
+     *  可能出现的不一会情况：
+     * cache aside pattern 是先更新数据库 再删除缓存 facebook也是
      */
     boolean blockInventoryWeakConsistent(long inventoryId, int amount);
 
@@ -18,6 +19,7 @@ public interface InventoryService {
 
 
     /**
+     * 场景是 读多写少
      * 通过redis得到库存信息，有一个基本条件就是，redis库存只有可能比实际库存多，不可能少。
      * 而blockInventoryWeakConsistent如果可以保证 更新db+invalidate cache之间间隔足够小， 就可以保证库存最后是一致的
      * 这个也可以从前端操作流程保证，a更新库存的时间 < b用户在前端首先结算的时候会读取一遍库存，提交订单的时候，也会读去库存，校验库存。
@@ -26,5 +28,7 @@ public interface InventoryService {
      * @return
      */
     boolean isPurchasable(long inventoryId, int amount);
+
+
 
 }
