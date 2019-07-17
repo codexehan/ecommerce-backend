@@ -18,5 +18,7 @@ public class Inventory extends BaseEntity {
     private long inventoryId;
 
     private long amount;
+
+    private long version;
 }
 
