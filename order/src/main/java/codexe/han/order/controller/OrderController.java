@@ -1,5 +1,6 @@
 package codexe.han.order.controller;
 
+import codexe.han.common.response.CodexeApiResponse;
 import codexe.han.order.client.InventoryClient;
 import codexe.han.order.dto.OrderProductDTO;
 import codexe.han.order.service.OrderService;
@@ -24,7 +25,8 @@ public class OrderController {
          *      enough: go to order page
          *      not enough: return error to remind
          */
-        return proceedCheckout(orderProductDTO);
+        this.orderService.proceedCheckout(orderProductDTO);
+        return CodexeApiResponse.builder().build();
     }
 
     @PostMapping("/continue/checkout")
@@ -41,11 +43,12 @@ public class OrderController {
          * 先invalidate缓存，再更新数据库。需要将read缓存和update数据库异步串行执行，来保证数据库的强一致性
          *
          *  NOTE: during peak load ->
-         *      mq - update db
-         *      sub quantity in redis
+         *      mq - update db  异步更新db
+         *      sub quantity in redis 扣减redis
          *      先发送db 再减redis 防止少卖情况的发生
          */
-        return null;
+        this.orderService.continueCheckout(orderProductDTO);
+        return CodexeApiResponse.builder().build();
 
     }
 }

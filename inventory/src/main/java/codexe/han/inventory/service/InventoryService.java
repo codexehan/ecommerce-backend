@@ -2,6 +2,8 @@ package codexe.han.inventory.service;
 
 public interface InventoryService {
     /**
+     * 扣减一件商品库存，实际开发应该是一组，一个order里面包含多个商品
+     *
      * 为什么不更新缓存
      * 1.多线程更新缓存容易出问题
      * 2.lazy加载，缓存不一定会一直有人读，读的时候再取出来
@@ -18,14 +20,14 @@ public interface InventoryService {
      *  解决方案：串行化读写请求
      * cache aside pattern 是先更新数据库 再删除缓存 facebook也是
      */
-    boolean blockInventoryWeakConsistent(long inventoryId, int amount);
+    boolean blockInventoryWeakConsistent(long cartItemId, long orderId, long inventoryId, int amount);
 
     /**
      * 流量不高的时候，为了保证缓存和数据库中库存的强一致性
      * 将对该inventoryId的读写路由到kafka topic的partition中，然后设置kafka参数max.in.flight.request.per.connection=1
      * 保证消息顺序。而且需要保证只有一个生产者
      */
-    boolean blockInventoryStrongConsistent(long inventoryId, int amount);
+    boolean blockInventoryStrongConsistent(long cartItemId, long inventoryId, int amount);
 
 
     /**

@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
     compile('org.springframework.cloud:spring-cloud-starter-consul-config')
     compile('org.springframework.cloud:spring-cloud-starter-feign')
+    compile('org.springframework.cloud:spring-cloud-starter-hystrix')
     compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
     compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
     compile group: 'org.flywaydb', name: 'flyway-core', version: '4.2.0'

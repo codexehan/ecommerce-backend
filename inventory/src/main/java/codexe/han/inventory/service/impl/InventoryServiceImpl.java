@@ -1,6 +1,8 @@
 package codexe.han.inventory.service.impl;
 
 import codexe.han.inventory.entity.Inventory;
+import codexe.han.inventory.entity.InventoryLog;
+import codexe.han.inventory.repository.InventoryLogRepository;
 import codexe.han.inventory.repository.InventoryRepository;
 import codexe.han.inventory.service.InventoryService;
 import lombok.AllArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -20,18 +23,39 @@ import java.util.concurrent.TimeUnit;
 public class InventoryServiceImpl implements InventoryService {
 
     private InventoryRepository inventoryRepository;
+    private InventoryLogRepository inventoryLogRepository;
     private RedisTemplate<String, Long> redisTemplate;
 
     private static final String inventoryKey = "inventory:";
     private static final String inventoryUpdate = "inventoryupdate:";
 
     @Override
-    public boolean blockInventoryWeakConsistent(long inventoryId, int amount) {
+    @Transactional(rollbackFor = {Exception.class})
+    public boolean blockInventoryWeakConsistent(long cartItemId, long orderId, long inventoryId, int amount) {
+       /* this.inventoryLogRepository.save(InventoryLog.builder()
+                .orderId(orderId).inventoryId(inventoryId).amount(amount).build());//先从数据库查找，存在则执行更新*/
+        int res = this.inventoryRepository.blockInventory(inventoryId, amount);
+        if(res == 1){
+            /**
+             * 扣减库存成功，进行记录
+             * 如果是重复扣减，会出现cartItemId重复报错
+             * 水平切分表的时候，要注意inventory和 inventorylog的路由策略
+             */
+            this.inventoryLogRepository.insert(cartItemId, orderId, inventoryId, amount);//用于对账单
+            this.redisTemplate.delete(inventoryKey+inventoryId);
+            return true;
+        }
+        else{
+            /**
+             * 库存不足，需要返回给前端
+             */
+        }
+        //add a transaction record
         return false;
     }
 
     @Override
-    public boolean blockInventoryStrongConsistent(long inventoryId, int amount) {
+    public boolean blockInventoryStrongConsistent(long orderId, long inventoryId, int amount) {
         return false;
     }
 
@@ -42,7 +66,7 @@ public class InventoryServiceImpl implements InventoryService {
          * 这里的redis更新是要保证顺序的。
          * 但是，在这两步之间 就可能出现缓存不一致情况。A读数据库 C改了数据库 B读数据库；B先更新缓存，A后更新缓存
          * 保证顺序的基本思路，这种情况下，需要记录数据更新的时间戳，时间戳就是数据库中读取的时间戳。每次要做更新的时候需要对比时间戳。
-         * 1.要么就是放在队列中，每次去时间戳最大的那个进行一次set
+         * 1.要么就是将请求放在队列中，然后去执行
          * 2.要么就添加分布式锁，每次获得锁以后进行更新
          * 3.要么就是用redis事务进行更新
          */
@@ -56,6 +80,7 @@ public class InventoryServiceImpl implements InventoryService {
                 remain = inventoryDB.getAmount();
                 /**
                  * update by optimistic watch
+                 * redis集群环境下，需要保证inventoryKey和inventoryUpdate在同一个redis上
                  */
                 redisTemplate.execute(new SessionCallback<Boolean>() {
                     @Override

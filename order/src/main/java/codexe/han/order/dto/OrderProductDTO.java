@@ -10,6 +10,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderProductDTO {
+
+    private long customerId;
+
+    private long productId;
+
+    private long cartItemId;//shopping bag item id
+
     private long inventoryId;
 
     private int quantity;
