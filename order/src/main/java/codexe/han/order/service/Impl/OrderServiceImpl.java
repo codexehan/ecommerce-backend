@@ -7,13 +7,16 @@ import codexe.han.order.repository.OrderItemRepository;
 import codexe.han.order.repository.OrderRepository;
 import codexe.han.order.service.OrderService;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.ribbon.proxy.annotation.Hystrix;
 import feign.FeignException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.SocketTimeoutException;
 
@@ -102,4 +105,22 @@ public class OrderServiceImpl implements OrderService {
         }
         return null;
     }
+
+    /**
+     * 这种方式会导致
+     */
+    @HystrixCommand
+    @Override
+    @Async//hystrix 异步执行
+    public void testHystrixCommand(DeferredResult deferredResult) {
+        log.info("{}进入testHystrixCommand in order service",Thread.currentThread().getName());
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        deferredResult.setResult("done");
+        log.info("{}退出testHystrixCommand in order service",Thread.currentThread().getName());
+    }
+
 }

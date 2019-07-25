@@ -9,9 +9,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-/**
- * Created by zhounan on 12/2/16.
- */
 @Configuration
 public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
     @Autowired
