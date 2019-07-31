@@ -139,7 +139,7 @@ public class TestController {
             // 返回超时信息
             deferredResult.setErrorResult("time out!");
         });
-        Future<String> hystrixCommandRes = new  ("testhc",deferredResult).queue();
+        Future<String> hystrixCommandRes = new CustomHystrixCommand("testhc",deferredResult).queue();
         log.info("{}退出test hystrix command",Thread.currentThread().getName());
         return deferredResult;
     }
@@ -173,13 +173,6 @@ public class TestController {
         return deferredResult;
     }
 
-    /**
-     * 服务降级
-     * 1.正常服务
-     * 2.请求队列
-     * 3.限流
-     * 5.系统提示异常
-     */
   //  @HystrixCommand(fallbackMethod = "testDegrade1")
     @GetMapping("/test/degrade")
     public ResponseEntity testDegrade(){
@@ -190,6 +183,15 @@ public class TestController {
 
         }
         return CodexeApiResponse.builder().data("no degrade").build();
+    }
+    @GetMapping("/test/degrade2")
+    public DeferredResult testDegrade2(){
+        /*log.info("{}进入testDegrade",Thread.currentThread().getName());
+        log.info("{}退出testDegrade",Thread.currentThread().getName());*/
+        DeferredResult deferredResult = new DeferredResult();
+        CustomHystrixCommand hystrixCommand = new CustomHystrixCommand("test",deferredResult);
+        hystrixCommand.queue();
+        return deferredResult;
     }
 
 }

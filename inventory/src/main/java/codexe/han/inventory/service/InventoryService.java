@@ -42,5 +42,6 @@ public interface InventoryService {
     boolean isPurchasable(long inventoryId, int amount);
 
 
+    void blockInventoryAsync();
 
 }

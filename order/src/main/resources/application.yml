@@ -4,7 +4,7 @@ server:
 logging:
   file: ./log/order.log
   pattern:
-    console: "%date{yyyy-MM-dd HH:mm:ss.SSS} -%5level [inventory][%15.15thread] %-40.40logger{39} [%6line]: %msg%n"
+    console: "%date{yyyy-MM-dd HH:mm:ss.SSS} -%5level [order][%15.15thread] %-40.40logger{39} [%6line]: %msg%n"
 endpoints:
   cors:
     allow-credentials: true

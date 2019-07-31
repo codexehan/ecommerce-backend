@@ -34,7 +34,12 @@ public class InventoryServiceImpl implements InventoryService {
     public boolean blockInventoryWeakConsistent(long cartItemId, long orderId, long inventoryId, int amount) {
        /* this.inventoryLogRepository.save(InventoryLog.builder()
                 .orderId(orderId).inventoryId(inventoryId).amount(amount).build());//先从数据库查找，存在则执行更新*/
-        int res = this.inventoryRepository.blockInventory(inventoryId, amount);
+        /**
+         * 1.先检测本地缓存，是否标记为已经没有库存
+         * 2.尝试去数据库扣减库存（这边可能会考虑是否要在redis进行一次校验，但是我们在之前的结算页面已经校验过，所以基本可以不用再次校验）
+          */
+        //假设本地校验商品，还有库存
+       int res = this.inventoryRepository.blockInventory(inventoryId, amount);
         if(res == 1){
             /**
              * 扣减库存成功，进行记录
@@ -116,6 +121,22 @@ public class InventoryServiceImpl implements InventoryService {
             }
         }
         return Long.compare(remain,amount)>=0;
+    }
+
+    /**
+     * 异步扣减库存(一个order里面的多个商品库存扣减)
+     * 1.保持幂等的前提下,扣减库存
+     * 2.扣减成功，或者扣减失败，更改order状态，将order状态写入redis还有对应的order_item状态
+     * 3.如果商品没货了，需要更新所有线上信息，已经用户购物车信息（这个可以百分百异步来做）还可以将商品下架状态更新到本地缓存
+     */
+    @Override
+    public void blockInventoryAsync() {
+        log.info("get inventory info from mq");
+        //扣减库存
+
+        //更新order状态，写入redis
+
+        //没有货 mq购物车 以及线上状态
     }
 
 }
